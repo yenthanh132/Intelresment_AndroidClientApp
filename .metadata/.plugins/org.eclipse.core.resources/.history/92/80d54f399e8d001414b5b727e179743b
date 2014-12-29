@@ -1,0 +1,88 @@
+package com.cs300.intelresment;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import android.app.Activity;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.GridView;
+import android.widget.ImageButton;
+import android.widget.TextView;
+
+import com.cs300.intelresment.adapter.OrderedFoodAdapter;
+import com.cs300.intelresment.data.Bill;
+import com.cs300.intelresment.data.Singleton;
+import com.cs300.intelresment.data.Table;
+
+public class OrderActivity extends Activity {
+
+	private Table table;
+	private Bill bill;
+	private OrderedFoodAdapter foodAdapter;
+	private TextView tvTableName, tvOrderDate;
+	private GridView gvOrderedFood;
+	private ImageButton btnBack;
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_table);
+
+		tvTableName = (TextView) findViewById(R.id.tvTableName);
+		tvOrderDate = (TextView) findViewById(R.id.tvOrderDate);
+		gvOrderedFood = (GridView) findViewById(R.id.gvOrderedFood);
+		btnBack = (ImageButton) findViewById(R.id.btnBack);
+
+		Bundle bundle = getIntent().getExtras();
+		int pos = bundle.getInt("tableID");
+		table = Singleton.myRestaurant.listTable.get(pos);
+
+		tvTableName.setText(table.name);
+		if (table.billID == 0) {
+			tvOrderDate.setText("[Bàn trống]");
+			bill = new Bill();
+		} else {
+			new LoadData().execute();
+		}
+
+		btnBack.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View arg0) {
+				finish();
+			}
+		});
+
+	}
+
+	class LoadData extends AsyncTask<Void, Void, Void> {
+
+		@Override
+		protected Void doInBackground(Void... params) {
+			bill = Singleton.myRestaurant.getBillByID(table.billID);
+			return null;
+		}
+
+		@Override
+		protected void onPostExecute(Void result) {
+			Date date = null;
+			try {
+				date = new SimpleDateFormat("yyyyy-mm-dd HH:mm:ss").parse(bill.orderDate.replace('T', ' ').replace('Z', ' '));
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			if (date != null)
+				tvOrderDate.setText(new SimpleDateFormat("HH:mm").format(date));
+			foodAdapter = new OrderedFoodAdapter(OrderActivity.this, bill.listOrderedFood);
+			gvOrderedFood.setAdapter(foodAdapter);
+			super.onPostExecute(result);
+		}
+
+	}
+
+}

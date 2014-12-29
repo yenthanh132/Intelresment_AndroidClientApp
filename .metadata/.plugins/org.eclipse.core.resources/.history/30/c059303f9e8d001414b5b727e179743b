@@ -1,0 +1,73 @@
+package com.cs300.intelresment;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import android.app.Activity;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.GridView;
+import android.widget.ImageButton;
+
+import com.cs300.intelresment.adapter.OrderedFoodAdapter;
+import com.cs300.intelresment.data.Bill;
+
+public class OrderActivity extends Activity {
+
+	private Bill bill;
+	private List<Integer> foodCountList=new ArrayList<Integer>();
+	private FoodAdapter foodAdapter;
+	private GridView gvFood;
+	private ImageButton btnBack;
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_table);
+
+
+		gvFood = (GridView) findViewById(R.id.gvFood);
+		btnBack = (ImageButton) findViewById(R.id.btnBack);
+
+		btnBack.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View arg0) {
+				finish();
+			}
+		});
+
+	}
+
+	class LoadData extends AsyncTask<Void, Void, Void> {
+
+		@Override
+		protected Void doInBackground(Void... params) {
+			
+			return null;
+		}
+
+		@Override
+		protected void onPostExecute(Void result) {
+			Date date = null;
+			try {
+				date = new SimpleDateFormat("yyyyy-mm-dd HH:mm:ss").parse(bill.orderDate.replace('T', ' ').replace('Z', ' '));
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			if (date != null)
+				tvOrderDate.setText(new SimpleDateFormat("HH:mm").format(date));
+			foodAdapter = new OrderedFoodAdapter(OrderActivity.this, bill.listOrderedFood);
+			gvOrderedFood.setAdapter(foodAdapter);
+			super.onPostExecute(result);
+		}
+
+	}
+
+}

@@ -1,0 +1,63 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.cs300.intelresment.MainActivity" >
+
+    <RelativeLayout
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#2AC25F"
+        android:padding="10dp" >
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:background="@drawable/transparent_button"
+            android:scaleType="fitXY"
+            android:src="@drawable/back" />
+
+        <TextView
+            android:id="@+id/tvLabel1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="Vietnam Lotus"
+            android:textColor="#fff"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <ImageButton
+            android:id="@+id/btnRefresh"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="5dp"
+            android:background="@drawable/transparent_button"
+            android:scaleType="fitXY"
+            android:src="@drawable/refresh" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/panelFood"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/header"
+        android:layout_margin="5dp"
+        android:background="@drawable/oval_rectangle"
+        android:padding="4dp" >
+
+        <GridView
+            android:id="@+id/gvTable"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:columnWidth="80dp"
+            android:numColumns="auto_fit"
+            android:scrollbars="none"
+            android:stretchMode="columnWidth" >
+        </GridView>
+    </RelativeLayout>
+
+</RelativeLayout>

@@ -1,0 +1,272 @@
+package com.cs300.intelresment;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.AlertDialog.Builder;
+import android.app.Dialog;
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Button;
+import android.widget.GridView;
+import android.widget.ImageButton;
+import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.cs300.intelresment.adapter.OrderedFoodAdapter;
+import com.cs300.intelresment.adapter.TableListAdapter;
+import com.cs300.intelresment.data.Bill;
+import com.cs300.intelresment.data.Singleton;
+import com.cs300.intelresment.data.Table;
+
+public class TableActivity extends Activity {
+
+	private static final int ORDER_ACTIVITY_RESPONDE = 1;
+	private Table table;
+	private Bill bill;
+	private OrderedFoodAdapter foodAdapter;
+	private TextView tvTableName, tvOrderDate;
+	private GridView gvOrderedFood;
+	private ImageButton btnBack, btnRefresh;
+	private Button btnChooseFood, btnOrder;
+	private ProgressDialog dialog;
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_table);
+
+		tvTableName = (TextView) findViewById(R.id.tvTableName);
+		tvOrderDate = (TextView) findViewById(R.id.tvOrderDate);
+		gvOrderedFood = (GridView) findViewById(R.id.gvOrderedFood);
+		btnBack = (ImageButton) findViewById(R.id.btnBack);
+		btnRefresh = (ImageButton) findViewById(R.id.btnRefresh);
+		btnChooseFood = (Button) findViewById(R.id.btnChooseFood);
+		btnOrder = (Button) findViewById(R.id.btnOrder);
+
+		Bundle bundle = getIntent().getExtras();
+		int pos = bundle.getInt("tableID");
+		table = Singleton.myRestaurant.listTable.get(pos);
+
+		tvTableName.setText(table.name);
+		doTableRefresh();
+
+		btnBack.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View arg0) {
+				finish();
+			}
+		});
+
+		btnRefresh.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View arg0) {
+				doTableRefresh();
+				Toast.makeText(getApplicationContext(), "Đã refresh thành công dữ liệu của bàn ăn", Toast.LENGTH_SHORT).show();
+			}
+		});
+
+		btnChooseFood.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View arg0) {
+				Intent intent = new Intent(TableActivity.this, OrderActivity.class);
+				Singleton.tmpBill = bill;
+				startActivityForResult(intent, ORDER_ACTIVITY_RESPONDE);
+			}
+		});
+
+		btnOrder.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View arg0) {
+				if (bill.listOrderedFood.size() == 0) {
+					AlertDialog.Builder builder = new Builder(TableActivity.this);
+					builder.setTitle("Thông báo");
+					builder.setMessage("Chưa có món ăn nào được chọn!");
+					builder.setPositiveButton("Đồng ý", new DialogInterface.OnClickListener() {
+
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							dialog.dismiss();
+						}
+					});
+					builder.create().show();
+					return;
+				}
+				table = Singleton.myRestaurant.getTableByID(table.ID);
+				if (bill.ID == 0 && table.billID != 0) {
+					AlertDialog.Builder builder = new Builder(TableActivity.this);
+					builder.setTitle("Thông báo");
+					builder.setMessage("Bàn này đã được đặt nên không thể gửi yêu cầu đặt mới! Hãy refresh để xem danh sách món ăn mới.");
+					builder.setPositiveButton("Đồng ý", new DialogInterface.OnClickListener() {
+
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							dialog.dismiss();
+						}
+					});
+					builder.create().show();
+					return;
+				}
+				new ProcessBill().execute();
+			}
+		});
+
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.main, menu);// Menu Resource, Menu
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.btnMove:
+			table = Singleton.myRestaurant.getTableByID(table.ID);
+
+			Dialog dialog = new Dialog(TableActivity.this);
+			dialog.setContentView(R.layout.dialog_tablepicker);
+			dialog.setTitle("Di chuyển bàn ăn");
+
+			final List<Table> freeTableList = new ArrayList<Table>();
+			for (int i = 0; i < Singleton.myRestaurant.listTable.size(); ++i)
+				if (Singleton.myRestaurant.listTable.get(i).billID == 0) {
+					freeTableList.add(Singleton.myRestaurant.listTable.get(i));
+				}
+			TableListAdapter adapter = new TableListAdapter(TableActivity.this, freeTableList);
+
+			ListView lvTable = (ListView) dialog.findViewById(R.id.lvTable);
+			lvTable.setAdapter(adapter);
+			lvTable.setOnItemClickListener(new OnItemClickListener() {
+
+				@Override
+				public void onItemClick(AdapterView<?> arg0, View arg1, int pos, long arg3) {
+					if (Singleton.myRestaurant.moveTableFromIDToID(table.ID, freeTableList.get(pos).ID)) {
+						Toast.makeText(getApplicationContext(), "Di chuyển bàn ăn thành công", Toast.LENGTH_SHORT).show();
+					}
+				}
+			});
+			return true;
+
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+	}
+
+	private void doTableRefresh() {
+		if (table.billID == 0) {
+			tvOrderDate.setText("[Bàn trống]");
+			bill = new Bill();
+			bill.ID = 0;
+			foodAdapter = new OrderedFoodAdapter(TableActivity.this, bill.listOrderedFood);
+			gvOrderedFood.setAdapter(foodAdapter);
+		} else {
+			new LoadData().execute();
+		}
+	}
+
+	private void CreateDialog() {
+		if (dialog != null)
+			return;
+		dialog = new ProgressDialog(this);
+		dialog.setTitle("Intelresment");
+		dialog.setMessage("Đang xử lí...");
+		dialog.setIndeterminate(true);
+		dialog.setCancelable(false);
+		dialog.hide();
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		// Check which request we're responding to
+		if (requestCode == ORDER_ACTIVITY_RESPONDE) {
+
+			if (resultCode == RESULT_OK) {
+				foodAdapter.notifyDataSetChanged();
+			}
+		}
+	}
+
+	class ProcessBill extends AsyncTask<Void, Void, Void> {
+
+		@Override
+		protected Void doInBackground(Void... params) {
+			Singleton.myRestaurant.addNewBill(bill);
+			Singleton.myRestaurant.addFoodToBill(bill);
+			Singleton.myRestaurant.addBillToTable(table.ID, bill.ID);
+			return null;
+		}
+
+		@Override
+		protected void onPostExecute(Void result) {
+			dialog.hide();
+			Toast.makeText(getApplicationContext(), "Đặt món thành công cho " + table.name, Toast.LENGTH_SHORT).show();
+			finish();
+			super.onPostExecute(result);
+		}
+
+		@Override
+		protected void onPreExecute() {
+			CreateDialog();
+			dialog.show();
+			super.onPreExecute();
+		}
+
+	}
+
+	class LoadData extends AsyncTask<Void, Void, Void> {
+		@Override
+		protected void onPreExecute() {
+			CreateDialog();
+			dialog.show();
+			super.onPreExecute();
+		}
+
+		@Override
+		protected Void doInBackground(Void... params) {
+			bill = Singleton.myRestaurant.getBillByID(table.billID);
+			return null;
+		}
+
+		@Override
+		protected void onPostExecute(Void result) {
+			Date date = null;
+			try {
+				date = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss").parse(bill.orderDate);
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			if (date != null)
+				tvOrderDate.setText(new SimpleDateFormat("HH:mm").format(date));
+			foodAdapter = new OrderedFoodAdapter(TableActivity.this, bill.listOrderedFood);
+			gvOrderedFood.setAdapter(foodAdapter);
+
+			dialog.hide();
+			super.onPostExecute(result);
+		}
+
+	}
+
+}

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="5dp" >
+
+    <RelativeLayout
+        android:id="@+id/panelImg"
+        android:layout_width="65dp"
+        android:layout_height="65dp"
+        android:background="@drawable/green_rectangle_noborder"
+        android:padding="5dp" >
+
+        <ImageView
+            android:id="@+id/ivImg"
+            android:layout_width="55dp"
+            android:layout_height="55dp"
+            android:layout_centerInParent="true"
+            android:background="@android:color/white" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/panelDetail"
+        android:layout_width="match_parent"
+        android:layout_height="65dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
+        android:layout_toLeftOf="@+id/panelNumber"
+        android:layout_toRightOf="@+id/panelImg" >
+
+        <TextView
+            android:id="@+id/tvID"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:text="001"
+            android:textColor="#2AC25F"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tvID"
+            android:text="Tên món ăn này có độ dài tới 2 dòng hiển thị"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvPrice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:text="400.000 VND"
+            android:textSize="12sp"
+            android:textStyle="italic" />
+
+        <TextView
+            android:id="@+id/tvPriceDeal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginLeft="5dp"
+            android:layout_toRightOf="@+id/tvPrice"
+            android:text="(-10%) 360.000 VND"
+            android:textColor="#E2413E"
+            android:textSize="12sp"
+            android:textStyle="italic" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/panelNumber"
+        android:layout_width="40dp"
+        android:layout_height="65dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="20dp"
+        android:layout_alignParentRight="true"
+        android:background="@drawable/red_panel" >
+
+        <TextView
+            android:id="@+id/tvNumber"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="1"
+            android:textColor="#fff"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+</RelativeLayout>

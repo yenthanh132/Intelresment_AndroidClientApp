@@ -1,0 +1,12 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.cs300.intelresment.MainActivity" >
+
+    <item
+        android:id="@+id/btnMove"
+        android:orderInCategory="100"
+        android:title="Đổi bàn ăn"
+        app:showAsAction="never"/>
+
+</menu>

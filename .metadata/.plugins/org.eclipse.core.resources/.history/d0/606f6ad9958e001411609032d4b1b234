@@ -1,0 +1,111 @@
+package com.cs300.intelresment;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import android.app.Activity;
+import android.content.Intent;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.GridView;
+import android.widget.ImageButton;
+
+import com.cs300.intelresment.adapter.FoodAdapter;
+import com.cs300.intelresment.data.Bill;
+import com.cs300.intelresment.data.Food;
+import com.cs300.intelresment.data.Singleton;
+
+public class OrderActivity extends Activity {
+
+	private Bill bill;
+	private List<Integer> foodCountList = new ArrayList<Integer>();
+	private FoodAdapter foodAdapter;
+	private GridView gvFood;
+	private ImageButton btnBack;
+	private Button btnChoose;
+	private EditText txtFilter;
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_order);
+		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+
+		gvFood = (GridView) findViewById(R.id.gvFood);
+		btnBack = (ImageButton) findViewById(R.id.btnBack);
+
+		btnBack.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View arg0) {
+				Intent returnIntent = new Intent();
+				setResult(RESULT_CANCELED, returnIntent);
+				finish();
+			}
+		});
+
+		btnChoose = (Button) findViewById(R.id.btnChoose);
+		btnChoose.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				bill.listOrderedFood.clear();
+				int cntFood = Singleton.myRestaurant.listFood.size();
+				for (int i = 0; i < cntFood; ++i) {
+					int count = foodCountList.get(i);
+					if (count > 0) {
+						Food food = new Food(Singleton.myRestaurant.listFood.get(i));
+						food.count = count;
+						bill.listOrderedFood.add(food);
+					}
+				}
+				Intent returnIntent = new Intent();
+				setResult(RESULT_OK, returnIntent);
+				finish();
+			}
+		});
+
+		txtFilter = (EditText) findViewById(R.id.txtFilter);
+		txtFilter.addTextChangedListener(new TextWatcher() {
+
+			@Override
+			public void onTextChanged(CharSequence s, int arg1, int arg2, int arg3) {
+				foodAdapter.getFilter().filter(s);
+			}
+
+			@Override
+			public void beforeTextChanged(CharSequence arg0, int arg1, int arg2, int arg3) {
+
+			}
+
+			@Override
+			public void afterTextChanged(Editable arg0) {
+
+			}
+		});
+
+		// Init
+		int cntFood = Singleton.myRestaurant.listFood.size();
+		while (foodCountList.size() < cntFood)
+			foodCountList.add(0);
+		bill = Singleton.tmpBill;
+		for (int i = 0; i < bill.listOrderedFood.size(); ++i) {
+			Food food = bill.listOrderedFood.get(i);
+			for (int j = 0; j < Singleton.myRestaurant.listFood.size(); ++j)
+				if (Singleton.myRestaurant.listFood.get(j).ID == food.ID) {
+					foodCountList.set(j, food.count);
+					break;
+				}
+		}
+		foodAdapter = new FoodAdapter(this, Singleton.myRestaurant.listFood, foodCountList);
+		gvFood.setAdapter(foodAdapter);
+	}
+
+}

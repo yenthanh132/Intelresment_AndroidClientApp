@@ -1,0 +1,21 @@
+package com.cs300.intelresment.data;
+
+public class Food {
+	public int ID, count;
+	public String name, imageSmallUrl, imageLargeUrl, description;
+	public float price;
+
+	public Food() {
+	}
+
+	public Food(Food food) {
+		ID = food.ID;
+		count = food.count;
+		name = food.name;
+		imageSmallUrl = food.imageSmallUrl;
+		imageLargeUrl = food.imageLargeUrl;
+		description = food.description;
+		price = food.price;
+	}
+
+}

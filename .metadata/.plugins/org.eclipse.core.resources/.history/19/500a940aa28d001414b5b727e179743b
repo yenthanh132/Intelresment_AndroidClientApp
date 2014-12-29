@@ -1,0 +1,60 @@
+package com.cs300.intelresment;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import android.app.Activity;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.GridView;
+import android.widget.ImageButton;
+
+import com.cs300.intelresment.adapter.FoodAdapter;
+import com.cs300.intelresment.data.Bill;
+import com.cs300.intelresment.data.Food;
+import com.cs300.intelresment.data.Singleton;
+
+public class OrderActivity extends Activity {
+
+	private Bill bill;
+	private List<Integer> foodCountList = new ArrayList<Integer>();
+	private FoodAdapter foodAdapter;
+	private GridView gvFood;
+	private ImageButton btnBack;
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_table);
+
+		gvFood = (GridView) findViewById(R.id.gvFood);
+		btnBack = (ImageButton) findViewById(R.id.btnBack);
+
+		btnBack.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View arg0) {
+				finish();
+			}
+		});
+
+		// Init
+		int cntFood = Singleton.myRestaurant.listFood.size();
+		while (foodCountList.size() < cntFood)
+			foodCountList.add(0);
+		bill = Singleton.tmpBill;
+		for (int i = 0; i < bill.listOrderedFood.size(); ++i) {
+			Food food = bill.listOrderedFood.get(i);
+			for (int j = 0; j < Singleton.myRestaurant.listFood.size(); ++j)
+				if (Singleton.myRestaurant.listFood.get(j).ID == food.ID) {
+					foodCountList.set(j, food.count);
+					break;
+				}
+		}
+		foodAdapter = new FoodAdapter(this, Singleton.myRestaurant.listFood, foodCountList);
+		gvFood.setAdapter(foodAdapter);
+	}
+
+}

@@ -1,0 +1,202 @@
+package com.cs300.intelresment.adapter;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import android.app.Activity;
+import android.app.Dialog;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.Filter;
+import android.widget.Filterable;
+import android.widget.ImageView;
+import android.widget.NumberPicker;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+
+import com.cs300.intelresment.R;
+import com.cs300.intelresment.data.Food;
+import com.cs300.intelresment.web.ImageLoader;
+
+public class FoodAdapter extends BaseAdapter implements Filterable {
+
+	private Activity context;
+	private List<Food> Data_FoodList, FoodList;
+	private List<Integer> Data_FoodCountList;
+	private List<Integer> FoodCountList;
+	private ImageLoader imageLoader;
+
+	static class ViewHolder {
+		public TextView tvID, tvName, tvPrice, tvPriceDeal, tvNumber;
+		public RelativeLayout panelNumber;
+		public ImageView ivImg;
+	}
+
+	public FoodAdapter(Activity context, List<Food> _FoodList, List<Integer> _FoodCountList) {
+		this.context = context;
+		Data_FoodList = _FoodList;
+		Data_FoodCountList = _FoodCountList;
+
+		FoodList = new ArrayList<Food>();
+		FoodCountList = new ArrayList<Integer>();
+		for (int i = 0; i < Data_FoodList.size(); ++i) {
+			FoodList.add(Data_FoodList.get(i));
+			FoodCountList.add(Data_FoodCountList.get(i));
+		}
+		imageLoader = new ImageLoader(context);
+	}
+
+	@Override
+	public int getCount() {
+		return FoodList.size();
+	}
+
+	@Override
+	public Object getItem(int pos) {
+		return FoodList.get(pos);
+	}
+
+	@Override
+	public long getItemId(int arg0) {
+		return 0;
+	}
+
+	@Override
+	public void notifyDataSetChanged() {
+		for (int i = 0; i < Data_FoodList.size(); ++i) {
+			for (int j = 0; j < FoodList.size(); ++j) {
+				if (FoodList.get(j).ID == Data_FoodList.get(i).ID) {
+					FoodCountList.set(j, Data_FoodCountList.get(i));
+					break;
+				}
+			}
+		}
+		super.notifyDataSetChanged();
+	}
+
+	@Override
+	public View getView(int position, View view, ViewGroup parent) {
+		View gridView = view;
+
+		if (view == null) {
+			LayoutInflater inflater = context.getLayoutInflater();
+			gridView = inflater.inflate(R.layout.food_row_view, parent, false);
+			ViewHolder viewHolder = new ViewHolder();
+			viewHolder.tvID = (TextView) gridView.findViewById(R.id.tvID);
+			viewHolder.tvName = (TextView) gridView.findViewById(R.id.tvName);
+			viewHolder.tvPrice = (TextView) gridView.findViewById(R.id.tvPrice);
+			viewHolder.tvPriceDeal = (TextView) gridView.findViewById(R.id.tvPriceDeal);
+			viewHolder.tvNumber = (TextView) gridView.findViewById(R.id.tvNumber);
+			viewHolder.ivImg = (ImageView) gridView.findViewById(R.id.ivImg);
+			viewHolder.panelNumber = (RelativeLayout) gridView.findViewById(R.id.panelNumber);
+			gridView.setTag(viewHolder);
+		}
+		ViewHolder viewHolder = (ViewHolder) gridView.getTag();
+		Food food = (Food) FoodList.get(position);
+		viewHolder.tvID.setText(String.format("%03d", food.ID));
+		viewHolder.tvName.setText(food.name);
+
+		viewHolder.tvPrice.setText(String.format("%2.0f", food.price) + " VND");
+		viewHolder.tvPriceDeal.setText("");
+		viewHolder.tvNumber.setTag(position);
+		viewHolder.tvNumber.setOnClickListener(NumberOnclickHandler);
+		viewHolder.panelNumber.setTag(position);
+		viewHolder.panelNumber.setOnClickListener(NumberOnclickHandler);
+
+		if (FoodCountList.get(position) > 0) {
+			viewHolder.tvNumber.setText(String.valueOf(FoodCountList.get(position)));
+		} else {
+			viewHolder.tvNumber.setText("");
+		}
+		imageLoader.DisplayImage(food.imageSmallUrl, viewHolder.ivImg);
+
+		return gridView;
+	}
+
+	private OnClickListener NumberOnclickHandler = new OnClickListener() {
+
+		@Override
+		public void onClick(View v) {
+			final int pos = (Integer) v.getTag();
+			final Dialog dialog = new Dialog(context);
+			dialog.setTitle("Chọn số lượng");
+			dialog.setContentView(R.layout.dialog_numberpicker);
+			Button btnSet = (Button) dialog.findViewById(R.id.btnSet);
+			Button btnCancel = (Button) dialog.findViewById(R.id.btnCancel);
+			final NumberPicker np = (NumberPicker) dialog.findViewById(R.id.numberPicker1);
+			np.setMaxValue(100);
+			np.setMinValue(0);
+			np.setWrapSelectorWheel(false);
+			np.setValue(FoodCountList.get(pos));
+			btnSet.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					FoodCountList.set(pos, np.getValue());
+					for (int i = 0; i < Data_FoodList.size(); ++i) {
+						if (FoodList.get(pos).ID == Data_FoodList.get(i).ID) {
+							Data_FoodCountList.set(i, np.getValue());
+							break;
+						}
+					}
+					dialog.dismiss();
+					notifyDataSetChanged();
+				}
+			});
+			btnCancel.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					dialog.dismiss();
+				}
+			});
+			dialog.show();
+		}
+	};
+
+	@Override
+	public Filter getFilter() {
+		class RetFilter {
+			public List<Food> foodList = new ArrayList<Food>();
+			public List<Integer> countList = new ArrayList<Integer>();
+		}
+
+		Filter filter = new Filter() {
+
+			@SuppressWarnings("unchecked")
+			@Override
+			protected void publishResults(CharSequence constraint, FilterResults results) {
+				RetFilter ret = (RetFilter) results.values;
+				FoodList = ret.foodList;
+				FoodCountList = ret.countList;
+				notifyDataSetChanged();
+			}
+
+			@Override
+			protected FilterResults performFiltering(CharSequence constraint) {
+
+				FilterResults results = new FilterResults();
+				RetFilter ret = new RetFilter();
+
+				String text = constraint.toString().toLowerCase().trim();
+
+				for (int i = 0; i < Data_FoodList.size(); i++) {
+					Food food = Data_FoodList.get(i);
+					if (String.format("%03d", food.ID).contains(text) || food.name.toLowerCase().contains(text)) {
+						ret.foodList.add(food);
+						ret.countList.add(Data_FoodCountList.get(i));
+					}
+				}
+
+				results.count = ret.foodList.size();
+				results.values = ret;
+
+				return results;
+			}
+		};
+
+		return filter;
+	}
+}

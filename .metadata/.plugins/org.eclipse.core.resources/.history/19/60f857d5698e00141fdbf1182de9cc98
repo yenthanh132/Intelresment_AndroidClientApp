@@ -1,0 +1,15 @@
+package com.cs300.intelresment.data;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Bill {
+	public int ID;
+	public String orderDate, paymentDate;
+	public float paymentPrice;
+
+	public List<Food> listOrderedFood = new ArrayList<Food>();
+
+	public boolean isOnline;
+	public String customerAddress, customerPhone, customerName;
+}
